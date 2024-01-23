@@ -1,6 +1,8 @@
-## 📤 Share 
+# 📤 Share 
 
-# Usage 
+Share any string (code, snippet, notes, etc) and get a link to share it
+
+## Usage 
 
 > start project
 ```
