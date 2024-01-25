@@ -1,63 +1,39 @@
 package main
 
 import (
-	"fmt"
+	"context"
+	"errors"
 	"log/slog"
-	"net"
-	"strings"
-)
+	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
 
-const (
-	okResponse = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n\r\n"
+	"github.com/matherique/share/internal/app"
 )
 
 func main() {
-	net, err := net.Listen("tcp", ":8080")
+	server := &http.Server{Addr: ":8080"}
 
-	if err != nil {
-		slog.Error("fail to create listener", "error", err)
-		return
-	}
-	defer net.Close()
+	app.Register()
 
-	msg := make(chan string)
-	go server(msg)
-
-	for {
-		conn, err := net.Accept()
-		if err != nil {
-			slog.Error("fail to create listener", "error", err)
-			continue
+	go func() {
+		if err := server.ListenAndServe(); err != nil && !errors.Is(http.ErrServerClosed, err) {
+			slog.Error("fail on listen and serve", "err", err)
+			panic(err)
 		}
+	}()
 
-		go client(conn, msg)
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, syscall.SIGTERM, os.Interrupt)
+	<-c
 
+	ctx, cancel := context.WithCancel(context.Background())
+
+	defer cancel()
+
+	if err := server.Shutdown(ctx); err != nil {
+		slog.Error("fail on shutdown", "err", err)
+		panic(err)
 	}
-}
-
-func server(msg chan string) {
-	for {
-		data := strings.SplitN(<-msg, "\r\n\r\n", 2)
-
-		if len(data) == 1 {
-			continue
-		}
-
-		body := data[1]
-
-		fmt.Println(body)
-	}
-}
-
-func client(conn net.Conn, msg chan<- string) {
-	defer conn.Close()
-	buff := make([]byte, 1024)
-
-	n, err := conn.Read(buff)
-	if err != nil {
-		return
-	}
-
-	msg <- string(buff[0:n])
-	conn.Write([]byte(okResponse))
 }
