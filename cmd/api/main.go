@@ -9,15 +9,22 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/matherique/share/internal/app"
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
+	"github.com/matherique/share/internal/usecase"
+	"github.com/matherique/share/internal/web"
 )
 
 func main() {
-	server := &http.Server{Addr: ":8080"}
+	r := chi.NewRouter()
+	r.Use(middleware.Logger)
 
-	app.Register()
+	makeHandlers(r)
+
+	server := &http.Server{Addr: ":8080", Handler: r}
 
 	go func() {
+		slog.Info("server start", "port", ":8080")
 		if err := server.ListenAndServe(); err != nil && !errors.Is(http.ErrServerClosed, err) {
 			slog.Error("fail on listen and serve", "err", err)
 			panic(err)
@@ -36,4 +43,9 @@ func main() {
 		slog.Error("fail on shutdown", "err", err)
 		panic(err)
 	}
+}
+
+func makeHandlers(r *chi.Mux) {
+	importUc := usecase.NewImportUseCase()
+	web.RegisterImportHandler(r, importUc)
 }
