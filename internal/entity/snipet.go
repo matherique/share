@@ -9,12 +9,13 @@ var now = time.Now
 
 type SnipetsRepository interface {
 	Save(ctx context.Context, snipet *Snipet) error
+	Get(ctx context.Context, hash string) (*Snipet, error)
 }
 
 type Snipet struct {
-	Hash_link  string    `bson:"hash_link"`
-	Content    string    `bson:"content"`
-	ExpirestAt time.Time `bson:"expires_at"`
+	Hash_link  string    `json:"hash_link" bson:"hash_link"`
+	Content    string    `json:"content" bson:"content"`
+	ExpirestAt time.Time `json:"expires_at" bson:"expires_at"`
 }
 
 func NewSnipet(hash, content string, duration int) *Snipet {
