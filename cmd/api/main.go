@@ -8,19 +8,31 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/matherique/share/internal/infra/web"
 	"github.com/matherique/share/internal/store"
 	"github.com/matherique/share/internal/usecase"
-	"github.com/matherique/share/internal/web"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 func main() {
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
 
-	makeHandlers(r)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI("mongodb://localhost:27017"))
+	if err != nil {
+		panic(err)
+	}
+
+	slog.Info("database connected")
+
+	makeHandlers(r, client.Database("share"))
 
 	server := &http.Server{Addr: ":8080", Handler: r}
 
@@ -36,7 +48,7 @@ func main() {
 	signal.Notify(c, syscall.SIGTERM, os.Interrupt)
 	<-c
 
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel = context.WithCancel(context.Background())
 
 	defer cancel()
 
@@ -46,8 +58,9 @@ func main() {
 	}
 }
 
-func makeHandlers(r *chi.Mux) {
-	hashesStore := store.NewHashesStore()
-	importUc := usecase.NewImportUseCase(hashesStore)
-	web.RegisterImportHandler(r, importUc)
+func makeHandlers(r *chi.Mux, db *mongo.Database) {
+	hashesStore := store.NewHashesStore(db)
+	snipetStore := store.NewSnipetStore(db)
+	importUc := usecase.NewCreateUseCase(hashesStore, snipetStore)
+	web.RegisterCreateHandler(r, importUc)
 }
