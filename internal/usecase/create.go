@@ -20,19 +20,19 @@ var (
 	ErrGetAvaliableLink     = errors.New("error getting avaliable link")
 )
 
-type ImportUseCase interface {
+type CreateUseCase interface {
 	Execute(ctx context.Context, r io.Reader, size int64) (string, error)
 }
 
-type importApp struct {
+type createUseCase struct {
 	maxSizeAllowed int64
 	hasher         utils.Hasher
 	hashStore      store.HashesStore
 	snipetStore    store.SnipetsStore
 }
 
-func NewImportUseCase(hashStore store.HashesStore, snipetStore store.SnipetsStore) ImportUseCase {
-	return &importApp{
+func NewCreateUseCase(hashStore store.HashesStore, snipetStore store.SnipetsStore) CreateUseCase {
+	return &createUseCase{
 		maxSizeAllowed: 1024 * 1024,
 		hasher:         utils.GenerateRandomHash,
 		hashStore:      hashStore,
@@ -40,7 +40,7 @@ func NewImportUseCase(hashStore store.HashesStore, snipetStore store.SnipetsStor
 	}
 }
 
-func (a importApp) Execute(ctx context.Context, r io.Reader, size int64) (string, error) {
+func (a createUseCase) Execute(ctx context.Context, r io.Reader, size int64) (string, error) {
 	buff := new(bytes.Buffer)
 
 	hashSha256 := sha256.New()
@@ -71,7 +71,7 @@ func (a importApp) Execute(ctx context.Context, r io.Reader, size int64) (string
 	return link, nil
 }
 
-func (a importApp) getLink(ctx context.Context, h hash.Hash) (string, error) {
+func (a createUseCase) getLink(ctx context.Context, h hash.Hash) (string, error) {
 	link := a.hasher(h)
 
 	has, err := a.hashStore.IsAvaliable(ctx, link)
