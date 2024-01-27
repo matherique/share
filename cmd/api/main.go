@@ -11,6 +11,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/matherique/share/internal/store"
 	"github.com/matherique/share/internal/usecase"
 	"github.com/matherique/share/internal/web"
 )
@@ -46,6 +47,7 @@ func main() {
 }
 
 func makeHandlers(r *chi.Mux) {
-	importUc := usecase.NewImportUseCase()
+	hashesStore := store.NewHashesStore()
+	importUc := usecase.NewImportUseCase(hashesStore)
 	web.RegisterImportHandler(r, importUc)
 }

@@ -5,10 +5,19 @@ import (
 	"context"
 	"crypto/sha256"
 	"errors"
+	"hash"
 	"io"
 	"log/slog"
 
+	"github.com/matherique/share/internal/entity"
+	"github.com/matherique/share/internal/store"
 	"github.com/matherique/share/pkg/utils"
+)
+
+var (
+	ErrUploadingFile        = errors.New("error uploading file")
+	ErrCheckingIFLinkExists = errors.New("error checking if link already exists")
+	ErrGetAvaliableLink     = errors.New("error getting avaliable link")
 )
 
 type ImportUseCase interface {
@@ -18,12 +27,16 @@ type ImportUseCase interface {
 type importApp struct {
 	maxSizeAllowed int64
 	hasher         utils.Hasher
+	hashStore      store.HashesStore
+	snipetStore    store.SnipetsStore
 }
 
-func NewImportUseCase() ImportUseCase {
+func NewImportUseCase(hashStore store.HashesStore, snipetStore store.SnipetsStore) ImportUseCase {
 	return &importApp{
 		maxSizeAllowed: 1024 * 1024,
 		hasher:         utils.GenerateRandomHash,
+		hashStore:      hashStore,
+		snipetStore:    snipetStore,
 	}
 }
 
@@ -36,12 +49,46 @@ func (a importApp) Execute(ctx context.Context, r io.Reader, size int64) (string
 
 	n, err := io.CopyN(mw, r, size)
 	if err != nil {
-		slog.Error("error uploading file", "err", err)
-		return "", errors.New("error uploading file: " + err.Error())
+		slog.Error(ErrUploadingFile.Error(), "err", err)
+		return "", ErrUploadingFile
 	}
 
 	slog.Info("receive bytes", "size", n)
-	link := a.hasher(hashSha256)
+
+	link, err := a.getLink(ctx, hashSha256)
+	if err != nil {
+		return "", err
+	}
+
+	snipet := entity.NewSnipet(link, buff.String(), 1)
+
+	go func() {
+		if err := a.snipetStore.Save(ctx, snipet); err != nil {
+			slog.Error("fail on save snipet", "err", err)
+		}
+	}()
+
+	return link, nil
+}
+
+func (a importApp) getLink(ctx context.Context, h hash.Hash) (string, error) {
+	link := a.hasher(h)
+
+	has, err := a.hashStore.IsAvaliable(ctx, link)
+
+	if err != nil {
+		slog.Error(ErrCheckingIFLinkExists.Error(), "err", err)
+		return "", ErrCheckingIFLinkExists
+	}
+
+	if !has {
+		link, err = a.hashStore.GetAvaliable(ctx)
+
+		if err != nil {
+			slog.Error(ErrGetAvaliableLink.Error(), "err", err)
+			return "", ErrGetAvaliableLink
+		}
+	}
 
 	return link, nil
 }
