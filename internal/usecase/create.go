@@ -10,7 +10,6 @@ import (
 	"log/slog"
 
 	"github.com/matherique/share/internal/entity"
-	"github.com/matherique/share/internal/store"
 	"github.com/matherique/share/pkg/utils"
 )
 
@@ -25,18 +24,18 @@ type CreateUseCase interface {
 }
 
 type createUseCase struct {
-	maxSizeAllowed int64
-	hasher         utils.Hasher
-	hashStore      store.HashesStore
-	snipetStore    store.SnipetsStore
+	maxSizeAllowed   int64
+	hasher           utils.Hasher
+	hashRepository   entity.HashesRepository
+	snipetRepository entity.SnipetsRepository
 }
 
-func NewCreateUseCase(hashStore store.HashesStore, snipetStore store.SnipetsStore) CreateUseCase {
+func NewCreateUseCase(hashrepository entity.HashesRepository, snipetrepository entity.SnipetsRepository) CreateUseCase {
 	return &createUseCase{
-		maxSizeAllowed: 1024 * 1024,
-		hasher:         utils.GenerateRandomHash,
-		hashStore:      hashStore,
-		snipetStore:    snipetStore,
+		maxSizeAllowed:   1024 * 1024,
+		hasher:           utils.GenerateRandomHash,
+		hashRepository:   hashrepository,
+		snipetRepository: snipetrepository,
 	}
 }
 
@@ -63,7 +62,7 @@ func (a createUseCase) Execute(ctx context.Context, r io.Reader, size int64) (st
 	snipet := entity.NewSnipet(link, buff.String(), 1)
 
 	go func() {
-		if err := a.snipetStore.Save(ctx, snipet); err != nil {
+		if err := a.snipetRepository.Save(ctx, snipet); err != nil {
 			slog.Error("fail on save snipet", "err", err)
 		}
 	}()
@@ -74,7 +73,7 @@ func (a createUseCase) Execute(ctx context.Context, r io.Reader, size int64) (st
 func (a createUseCase) getLink(ctx context.Context, h hash.Hash) (string, error) {
 	link := a.hasher(h)
 
-	has, err := a.hashStore.IsAvaliable(ctx, link)
+	has, err := a.hashRepository.IsAvaliable(ctx, link)
 
 	if err != nil {
 		slog.Error(ErrCheckingIFLinkExists.Error(), "err", err)
@@ -82,7 +81,7 @@ func (a createUseCase) getLink(ctx context.Context, h hash.Hash) (string, error)
 	}
 
 	if !has {
-		link, err = a.hashStore.GetAvaliable(ctx)
+		link, err = a.hashRepository.GetAvaliable(ctx)
 
 		if err != nil {
 			slog.Error(ErrGetAvaliableLink.Error(), "err", err)

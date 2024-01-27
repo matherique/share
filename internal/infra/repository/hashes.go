@@ -1,4 +1,4 @@
-package store
+package repository
 
 import (
 	"context"
@@ -15,24 +15,19 @@ var (
 	now = time.Now
 )
 
-type HashesStore interface {
-	GetAvaliable(ctx context.Context) (string, error)
-	IsAvaliable(ctx context.Context, hash string) (bool, error)
-}
-
-type hashesStore struct {
+type hashesRepositoryMongo struct {
 	db         *mongo.Database
 	collection string
 }
 
-func NewHashesStore(db *mongo.Database) HashesStore {
-	return &hashesStore{
+func NewHashesRepositoryMongo(db *mongo.Database) entity.HashesRepository {
+	return &hashesRepositoryMongo{
 		db:         db,
 		collection: "hashes",
 	}
 }
 
-func (h hashesStore) IsAvaliable(ctx context.Context, hash string) (bool, error) {
+func (h hashesRepositoryMongo) IsAvaliable(ctx context.Context, hash string) (bool, error) {
 	filter := bson.M{
 		"hash": hash,
 	}
@@ -55,7 +50,7 @@ func (h hashesStore) IsAvaliable(ctx context.Context, hash string) (bool, error)
 	return hashes.IsAvaliable, nil
 }
 
-func (h hashesStore) GetAvaliable(ctx context.Context) (string, error) {
+func (h hashesRepositoryMongo) GetAvaliable(ctx context.Context) (string, error) {
 	filter := bson.M{
 		"is_avaliable": true,
 	}

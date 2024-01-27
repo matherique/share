@@ -1,8 +1,15 @@
 package entity
 
-import "time"
+import (
+	"context"
+	"time"
+)
 
 var now = time.Now
+
+type SnipetsRepository interface {
+	Save(ctx context.Context, snipet *Snipet) error
+}
 
 type Snipet struct {
 	Hash_link  string    `bson:"hash_link"`

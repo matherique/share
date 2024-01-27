@@ -12,8 +12,8 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/matherique/share/internal/infra/repository"
 	"github.com/matherique/share/internal/infra/web"
-	"github.com/matherique/share/internal/store"
 	"github.com/matherique/share/internal/usecase"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -59,8 +59,9 @@ func main() {
 }
 
 func makeHandlers(r *chi.Mux, db *mongo.Database) {
-	hashesStore := store.NewHashesStore(db)
-	snipetStore := store.NewSnipetStore(db)
+	hashesStore := repository.NewHashesRepositoryMongo(db)
+	snipetStore := repository.NewSnipetRepositoryMongo(db)
+
 	importUc := usecase.NewCreateUseCase(hashesStore, snipetStore)
 	web.RegisterCreateHandler(r, importUc)
 }
