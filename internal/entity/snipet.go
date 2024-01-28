@@ -13,14 +13,14 @@ type SnipetsRepository interface {
 }
 
 type Snipet struct {
-	Hash_link  string    `json:"hash" bson:"hash"`
+	HashLink   string    `json:"hash" bson:"hash"`
 	Content    string    `json:"content" bson:"content"`
 	ExpirestAt time.Time `json:"expires_at" bson:"expires_at"`
 }
 
 func NewSnipet(hash, content string, duration int) *Snipet {
 	return &Snipet{
-		Hash_link:  hash,
+		HashLink:   hash,
 		Content:    content,
 		ExpirestAt: time.Now().AddDate(0, 0, duration),
 	}
