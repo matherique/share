@@ -1,6 +1,7 @@
 package web
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -35,6 +36,12 @@ func (g getSnipetHandler) get(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		utils.SendRespond(w, http.StatusNotFound, getSnipetError{"not found"})
+		return
+	}
+
+	if !utils.IsBrowerRequest(r) {
+		w.WriteHeader(http.StatusOK)
+		fmt.Fprintf(w, snipet.Content)
 		return
 	}
 

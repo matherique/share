@@ -3,6 +3,7 @@ package utils
 import (
 	"crypto/rand"
 	"encoding/base64"
+	"strings"
 )
 
 type Hasher func() string
@@ -15,5 +16,5 @@ func GenerateRandomHash() string {
 	}
 
 	base := base64.StdEncoding.EncodeToString(b)
-	return base[:8]
+	return strings.ReplaceAll(base[:12], "/", "")
 }

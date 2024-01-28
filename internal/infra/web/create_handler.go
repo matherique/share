@@ -1,6 +1,7 @@
 package web
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -29,5 +30,5 @@ func (h createHandler) do(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusCreated)
-	w.Write([]byte(r.Host + "/" + link))
+	fmt.Fprintf(w, r.Host+"/"+link)
 }
