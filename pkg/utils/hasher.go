@@ -1,13 +1,19 @@
 package utils
 
 import (
+	"crypto/rand"
 	"encoding/base64"
-	"hash"
 )
 
-type Hasher func(b hash.Hash) string
+type Hasher func() string
 
-func GenerateRandomHash(h hash.Hash) string {
-	base := base64.StdEncoding.EncodeToString(h.Sum(nil))
+func GenerateRandomHash() string {
+	b := make([]byte, 10)
+	_, err := rand.Read(b)
+	if err != nil {
+		panic(err)
+	}
+
+	base := base64.StdEncoding.EncodeToString(b)
 	return base[:8]
 }

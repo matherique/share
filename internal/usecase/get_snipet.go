@@ -30,6 +30,7 @@ func NewGetSnipetUseCase(snipetRepository entity.SnipetsRepository) GetSnipetUse
 
 func (g *getSnipetUseCase) Execute(ctx context.Context, h string) (*entity.Snipet, error) {
 	s, err := g.snipetRepository.Get(ctx, h)
+
 	if errors.Is(err, utils.ErrNotFound) {
 		slog.Error(ErrNotFound.Error(), "err", err)
 		return nil, ErrNotFound

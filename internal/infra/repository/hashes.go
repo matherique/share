@@ -35,10 +35,10 @@ func (h hashesRepositoryMongo) IsAvaliable(ctx context.Context, hash string) (bo
 	res := h.db.Collection(h.collection).FindOne(ctx, filter)
 	if err := res.Err(); err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
-			return false, nil
+			return true, nil
 		}
 
-		return false, err
+		return true, err
 	}
 
 	var hashes entity.Hashes
@@ -46,7 +46,6 @@ func (h hashesRepositoryMongo) IsAvaliable(ctx context.Context, hash string) (bo
 	if err := res.Decode(&hashes); err != nil {
 		return false, nil
 	}
-
 	return hashes.IsAvaliable, nil
 }
 

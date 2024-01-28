@@ -1,0 +1,28 @@
+version: '3.4'
+
+services:
+  mongo:
+    image: mongo
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: 123
+    ports:
+      - "27017:27017"
+    networks:
+      - share
+
+  app:
+    build:
+      dockerfile: ./Dockerfile
+      context: .
+    container_name: app
+    ports:
+      - "8080:8080"
+    networks:
+      - share
+    depends_on:
+      - "mongo"
+
+networks: 
+    share:
+      driver: bridge

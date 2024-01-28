@@ -13,7 +13,7 @@ type SnipetsRepository interface {
 }
 
 type Snipet struct {
-	Hash_link  string    `json:"hash_link" bson:"hash_link"`
+	Hash_link  string    `json:"hash" bson:"hash"`
 	Content    string    `json:"content" bson:"content"`
 	ExpirestAt time.Time `json:"expires_at" bson:"expires_at"`
 }

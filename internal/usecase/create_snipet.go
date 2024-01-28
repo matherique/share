@@ -3,9 +3,7 @@ package usecase
 import (
 	"bytes"
 	"context"
-	"crypto/sha256"
 	"errors"
-	"hash"
 	"io"
 	"log/slog"
 
@@ -42,11 +40,7 @@ func NewCreateUseCase(hashrepository entity.HashesRepository, snipetrepository e
 func (a createUseCase) Execute(ctx context.Context, r io.Reader, size int64) (string, error) {
 	buff := new(bytes.Buffer)
 
-	hashSha256 := sha256.New()
-
-	mw := io.MultiWriter(buff, hashSha256)
-
-	n, err := io.CopyN(mw, r, size)
+	n, err := io.CopyN(buff, r, size)
 	if err != nil {
 		slog.Error(ErrUploadingFile.Error(), "err", err)
 		return "", ErrUploadingFile
@@ -54,7 +48,7 @@ func (a createUseCase) Execute(ctx context.Context, r io.Reader, size int64) (st
 
 	slog.Info("receive bytes", "size", n)
 
-	link, err := a.getLink(ctx, hashSha256)
+	link, err := a.getLink(ctx)
 	if err != nil {
 		return "", err
 	}
@@ -62,7 +56,7 @@ func (a createUseCase) Execute(ctx context.Context, r io.Reader, size int64) (st
 	snipet := entity.NewSnipet(link, buff.String(), 1)
 
 	go func() {
-		if err := a.snipetRepository.Save(ctx, snipet); err != nil {
+		if err := a.snipetRepository.Save(context.Background(), snipet); err != nil {
 			slog.Error("fail on save snipet", "err", err)
 		}
 	}()
@@ -70,8 +64,8 @@ func (a createUseCase) Execute(ctx context.Context, r io.Reader, size int64) (st
 	return link, nil
 }
 
-func (a createUseCase) getLink(ctx context.Context, h hash.Hash) (string, error) {
-	link := a.hasher(h)
+func (a createUseCase) getLink(ctx context.Context) (string, error) {
+	link := a.hasher()
 
 	has, err := a.hashRepository.IsAvaliable(ctx, link)
 

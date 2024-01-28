@@ -25,8 +25,12 @@ func main() {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI("mongodb://localhost:27017"))
+
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI("mongodb://root:123@mongo:27017"))
 	if err != nil {
+		panic(err)
+	}
+	if err := client.Ping(ctx, nil); err != nil {
 		panic(err)
 	}
 
@@ -62,6 +66,6 @@ func makeHandlers(r *chi.Mux, db *mongo.Database) {
 	hashesStore := repository.NewHashesRepositoryMongo(db)
 	snipetStore := repository.NewSnipetRepositoryMongo(db)
 
-	importUc := usecase.NewCreateUseCase(hashesStore, snipetStore)
-	web.RegisterCreateHandler(r, importUc)
+	web.RegisterCreateHandler(r, usecase.NewCreateUseCase(hashesStore, snipetStore))
+	web.NewGetSnipetHandler(r, usecase.NewGetSnipetUseCase(snipetStore))
 }
