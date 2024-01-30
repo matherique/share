@@ -1,6 +1,6 @@
 # 📤 Share 
 
-Share any string (code, snippet, notes, etc) and get a link to share it
+Create a shareable link from any string (code, snippet, notes, etc)
 
 ## Usage 
 
