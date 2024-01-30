@@ -8,13 +8,10 @@ import (
 	"log/slog"
 
 	"github.com/matherique/share/internal/entity"
-	"github.com/matherique/share/pkg/utils"
 )
 
 var (
-	ErrUploadingFile        = errors.New("error uploading file")
-	ErrCheckingIFLinkExists = errors.New("error checking if link already exists")
-	ErrGetAvaliableLink     = errors.New("error getting avaliable link")
+	ErrUploadingFile = errors.New("error uploading file")
 )
 
 type CreateUseCase interface {
@@ -22,17 +19,14 @@ type CreateUseCase interface {
 }
 
 type createUseCase struct {
-	maxSizeAllowed   int64
-	hasher           utils.Hasher
-	hashRepository   entity.HashesRepository
-	snipetRepository entity.SnipetsRepository
+	maxSizeAllowed      int64
+	snipetRepository    entity.SnipetsRepository
+	generateHashUseCase GenerateHashUseCase
 }
 
 func NewCreateUseCase(hashrepository entity.HashesRepository, snipetrepository entity.SnipetsRepository) CreateUseCase {
 	return &createUseCase{
 		maxSizeAllowed:   1024 * 1024,
-		hasher:           utils.GenerateRandomHash,
-		hashRepository:   hashrepository,
 		snipetRepository: snipetrepository,
 	}
 }
@@ -48,7 +42,7 @@ func (a createUseCase) Execute(ctx context.Context, r io.Reader, size int64) (st
 
 	slog.Info("receive bytes", "size", n)
 
-	link, err := a.getLink(ctx)
+	link, err := a.generateHashUseCase.Execute(ctx)
 	if err != nil {
 		return "", err
 	}
@@ -60,28 +54,6 @@ func (a createUseCase) Execute(ctx context.Context, r io.Reader, size int64) (st
 			slog.Error("fail on save snipet", "err", err)
 		}
 	}()
-
-	return link, nil
-}
-
-func (a createUseCase) getLink(ctx context.Context) (string, error) {
-	link := a.hasher()
-
-	has, err := a.hashRepository.IsAvaliable(ctx, link)
-
-	if err != nil {
-		slog.Error(ErrCheckingIFLinkExists.Error(), "err", err)
-		return "", ErrCheckingIFLinkExists
-	}
-
-	if !has {
-		link, err = a.hashRepository.GetAvaliable(ctx)
-
-		if err != nil {
-			slog.Error(ErrGetAvaliableLink.Error(), "err", err)
-			return "", ErrGetAvaliableLink
-		}
-	}
 
 	return link, nil
 }
