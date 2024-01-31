@@ -3,7 +3,6 @@ package usecase
 import (
 	"context"
 	"errors"
-	"fmt"
 	"log/slog"
 
 	"github.com/matherique/share/internal/entity"
@@ -48,8 +47,6 @@ func (g *getSecureSnipetUseCase) Execute(ctx context.Context, h string, key []by
 		slog.Error(ErrInvalidKey.Error(), "err", err)
 		return nil, ErrInvalidKey
 	}
-
-	fmt.Println(msg)
 
 	s.Content = msg
 	return s, nil
