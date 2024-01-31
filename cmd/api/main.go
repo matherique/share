@@ -68,7 +68,10 @@ func makeHandlers(r *chi.Mux, db *mongo.Database) {
 	snipetStore := repository.NewSnipetRepositoryMongo(db)
 	generateHash := usecase.NewGenerateHashUseCase(hashesStore)
 
-	web.RegisterCreateSecureHandler(r, usecase.NewCreateSecureUseCase(snipetStore, generateHash, secure.NewAESSecure()))
+	sec := secure.NewAESSecure()
+
+	web.NewGetSecureSnipetHandler(r, usecase.NewGetSecureSnipetUseCase(snipetStore, sec))
+	web.RegisterCreateSecureHandler(r, usecase.NewCreateSecureUseCase(snipetStore, generateHash, sec))
 	web.RegisterCreateHandler(r, usecase.NewCreateUseCase(snipetStore, generateHash))
 	web.NewGetSnipetHandler(r, usecase.NewGetSnipetUseCase(snipetStore))
 }

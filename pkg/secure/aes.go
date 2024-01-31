@@ -39,10 +39,15 @@ func (a AESSecure) Encrypt(message []byte) (string, string, error) {
 func (a AESSecure) Decrypt(key []byte, message string) (string, error) {
 	cipherText, err := base64.StdEncoding.DecodeString(message)
 	if err != nil {
-		return "", fmt.Errorf("could not base64 decode: %v", err)
+		return "", fmt.Errorf("could not base64 decode message: %v", err)
 	}
 
-	block, err := aes.NewCipher(key)
+	cipherkey, err := base64.StdEncoding.DecodeString(string(key))
+	if err != nil {
+		return "", fmt.Errorf("could not base64 decode key: %v", err)
+	}
+
+	block, err := aes.NewCipher(cipherkey)
 	if err != nil {
 		return "", fmt.Errorf("could not create new cipher: %v", err)
 	}
