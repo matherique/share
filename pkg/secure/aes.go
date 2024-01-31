@@ -15,25 +15,25 @@ func NewAESSecure() *AESSecure {
 	return &AESSecure{}
 }
 
-func (a AESSecure) Encrypt(message []byte) ([]byte, string, error) {
+func (a AESSecure) Encrypt(message []byte) (string, string, error) {
 	key := make([]byte, 16)
 	_, err := rand.Read(key)
 
 	block, err := aes.NewCipher(key)
 	if err != nil {
-		return nil, "", fmt.Errorf("could not create new cipher: %v", err)
+		return "", "", fmt.Errorf("could not create new cipher: %v", err)
 	}
 
 	cipherText := make([]byte, aes.BlockSize+len(message))
 	iv := cipherText[:aes.BlockSize]
 	if _, err = io.ReadFull(rand.Reader, iv); err != nil {
-		return nil, "", fmt.Errorf("could not encrypt: %v", err)
+		return "", "", fmt.Errorf("could not encrypt: %v", err)
 	}
 
 	stream := cipher.NewCFBEncrypter(block, iv)
 	stream.XORKeyStream(cipherText[aes.BlockSize:], message)
 
-	return key, base64.StdEncoding.EncodeToString(cipherText), nil
+	return base64.StdEncoding.EncodeToString(key), base64.StdEncoding.EncodeToString(cipherText), nil
 }
 
 func (a AESSecure) Decrypt(key []byte, message string) (string, error) {

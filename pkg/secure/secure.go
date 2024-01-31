@@ -1,6 +1,6 @@
 package secure
 
 type Secure interface {
-	Encrypt(message string) ([]byte, string, error)
-	Decrypt(key string, message string) (string, error)
+	Encrypt(message []byte) (string, string, error)
+	Decrypt(key []byte, message string) (string, error)
 }

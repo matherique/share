@@ -24,10 +24,11 @@ type createUseCase struct {
 	generateHashUseCase GenerateHashUseCase
 }
 
-func NewCreateUseCase(hashrepository entity.HashesRepository, snipetrepository entity.SnipetsRepository) CreateUseCase {
+func NewCreateUseCase(snipetrepository entity.SnipetsRepository, generateHash GenerateHashUseCase) CreateUseCase {
 	return &createUseCase{
-		maxSizeAllowed:   1024 * 1024,
-		snipetRepository: snipetrepository,
+		maxSizeAllowed:      1024 * 1024,
+		snipetRepository:    snipetrepository,
+		generateHashUseCase: generateHash,
 	}
 }
 

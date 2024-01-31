@@ -15,6 +15,7 @@ import (
 	"github.com/matherique/share/internal/infra/repository"
 	"github.com/matherique/share/internal/infra/web"
 	"github.com/matherique/share/internal/usecase"
+	"github.com/matherique/share/pkg/secure"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -65,7 +66,9 @@ func main() {
 func makeHandlers(r *chi.Mux, db *mongo.Database) {
 	hashesStore := repository.NewHashesRepositoryMongo(db)
 	snipetStore := repository.NewSnipetRepositoryMongo(db)
+	generateHash := usecase.NewGenerateHashUseCase(hashesStore)
 
-	web.RegisterCreateHandler(r, usecase.NewCreateUseCase(hashesStore, snipetStore))
+	web.RegisterCreateSecureHandler(r, usecase.NewCreateSecureUseCase(snipetStore, generateHash, secure.NewAESSecure()))
+	web.RegisterCreateHandler(r, usecase.NewCreateUseCase(snipetStore, generateHash))
 	web.NewGetSnipetHandler(r, usecase.NewGetSnipetUseCase(snipetStore))
 }
