@@ -39,6 +39,11 @@ func (g getSnipetHandler) get(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if snipet.IsSecure {
+		utils.SendRespond(w, http.StatusUnauthorized, getSnipetError{"unauthorized"})
+		return
+	}
+
 	if !utils.IsBrowerRequest(r) {
 		w.WriteHeader(http.StatusOK)
 		fmt.Fprintf(w, snipet.Content)

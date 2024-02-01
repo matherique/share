@@ -59,6 +59,7 @@ func (c *createSecureUseCase) Execute(ctx context.Context, r io.Reader, size int
 	}
 
 	snipet := entity.NewSnipet(link, text, 1)
+	snipet.SetSecure()
 
 	go func() {
 		if err := c.snipetRepository.Save(context.Background(), snipet); err != nil {
