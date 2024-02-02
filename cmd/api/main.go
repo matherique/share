@@ -20,14 +20,11 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-func main() {
-	r := chi.NewRouter()
-	r.Use(middleware.Logger)
-
+func connectNoSqlDatabase(database, url string) *mongo.Database {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI("mongodb://root:123@mongo:27017"))
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(url))
 	if err != nil {
 		panic(err)
 	}
@@ -35,9 +32,18 @@ func main() {
 		panic(err)
 	}
 
+	return client.Database(database)
+}
+
+func main() {
+	r := chi.NewRouter()
+	r.Use(middleware.Logger)
+
 	slog.Info("database connected")
 
-	makeHandlers(r, client.Database("share"))
+	db := connectNoSqlDatabase("share", "mongodb://root:123@mongo:27017")
+
+	makeHandlers(r, db)
 
 	server := &http.Server{Addr: ":8080", Handler: r}
 
@@ -53,12 +59,16 @@ func main() {
 	signal.Notify(c, syscall.SIGTERM, os.Interrupt)
 	<-c
 
-	ctx, cancel = context.WithCancel(context.Background())
-
+	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
+	if err := db.Client().Disconnect(ctx); err != nil {
+		slog.Error("fail on shutdown database", "err", err)
+		panic(err)
+	}
+
 	if err := server.Shutdown(ctx); err != nil {
-		slog.Error("fail on shutdown", "err", err)
+		slog.Error("fail on shutdown server", "err", err)
 		panic(err)
 	}
 }
