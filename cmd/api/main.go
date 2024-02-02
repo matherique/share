@@ -74,14 +74,29 @@ func main() {
 }
 
 func makeHandlers(r *chi.Mux, db *mongo.Database) {
-	hashesStore := repository.NewHashesRepositoryMongo(db)
-	snipetStore := repository.NewSnipetRepositoryMongo(db)
-	generateHash := usecase.NewGenerateHashUseCase(hashesStore)
-
+	// secure pkg
 	sec := secure.NewAESSecure()
 
-	web.NewGetSecureSnipetHandler(r, usecase.NewGetSecureSnipetUseCase(snipetStore, sec))
-	web.RegisterCreateSecureHandler(r, usecase.NewCreateSecureUseCase(snipetStore, generateHash, sec))
-	web.RegisterCreateHandler(r, usecase.NewCreateUseCase(snipetStore, generateHash))
-	web.NewGetSnipetHandler(r, usecase.NewGetSnipetUseCase(snipetStore))
+	// repository
+	hashesStore := repository.NewHashesRepositoryMongo(db)
+	snipetStore := repository.NewSnipetRepositoryMongo(db)
+
+	// use case
+	generateHash := usecase.NewGenerateHashUseCase(hashesStore)
+	getSecureSnipetUsecase := usecase.NewGetSecureSnipetUseCase(snipetStore, sec)
+	createSecureUserCase := usecase.NewCreateSecureUseCase(snipetStore, generateHash, sec)
+	createUseCase := usecase.NewCreateUseCase(snipetStore, generateHash)
+	getSnipetUseCase := usecase.NewGetSnipetUseCase(snipetStore)
+
+	// handlers
+	getSecureSnipetHandler := web.NewGetSecureSnipetHandler(getSecureSnipetUsecase)
+	createSecureHandler := web.RegisterCreateSecureHandler(createSecureUserCase)
+	createHandler := web.RegisterCreateHandler(createUseCase)
+	getSnipetHandler := web.NewGetSnipetHandler(getSnipetUseCase)
+
+	// routers
+	r.Get("/secure/{hash}", getSecureSnipetHandler.Do)
+	r.Get("/{hash}", getSnipetHandler.Do)
+	r.Post("/{hash}", createHandler.Do)
+	r.Post("/secure/{hash}", createSecureHandler.Do)
 }

@@ -31,8 +31,8 @@ func (s snipetsRepositoryMongo) Save(ctx context.Context, snipet *entity.Snipet)
 	return nil
 }
 
-func (s *snipetsRepositoryMongo) Get(ctx context.Context, hash string) (*entity.Snipet, error) {
-	res := s.db.Collection(s.collection).FindOne(ctx, bson.M{"hash": hash})
+func (s *snipetsRepositoryMongo) Get(ctx context.Context, hash string, isSecure bool) (*entity.Snipet, error) {
+	res := s.db.Collection(s.collection).FindOne(ctx, bson.M{"hash": hash, "is_secure": isSecure})
 
 	if err := res.Err(); err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {

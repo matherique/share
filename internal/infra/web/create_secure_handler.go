@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/go-chi/chi/v5"
 	"github.com/matherique/share/internal/usecase"
 )
 
@@ -12,15 +11,15 @@ type createSecureHandler struct {
 	createSecureSnipet usecase.CreateSecureSnipetUseCase
 }
 
-func RegisterCreateSecureHandler(router *chi.Mux, createUseCase usecase.CreateSecureSnipetUseCase) {
+func RegisterCreateSecureHandler(createUseCase usecase.CreateSecureSnipetUseCase) *createSecureHandler {
 	i := &createSecureHandler{
 		createSecureSnipet: createUseCase,
 	}
 
-	router.Post("/secure", i.do)
+	return i
 }
 
-func (h createSecureHandler) do(w http.ResponseWriter, r *http.Request) {
+func (h createSecureHandler) Do(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
 	key, link, err := h.createSecureSnipet.Execute(r.Context(), r.Body, r.ContentLength)

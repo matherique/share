@@ -20,16 +20,18 @@ type GetSnipetUseCase interface {
 
 type getSnipetUseCase struct {
 	snipetRepository entity.SnipetsRepository
+	isSecure         bool
 }
 
 func NewGetSnipetUseCase(snipetRepository entity.SnipetsRepository) GetSnipetUseCase {
 	return &getSnipetUseCase{
 		snipetRepository: snipetRepository,
+		isSecure:         false,
 	}
 }
 
 func (g *getSnipetUseCase) Execute(ctx context.Context, h string) (*entity.Snipet, error) {
-	s, err := g.snipetRepository.Get(ctx, h)
+	s, err := g.snipetRepository.Get(ctx, h, g.isSecure)
 
 	if errors.Is(err, utils.ErrNotFound) {
 		slog.Error(ErrNotFound.Error(), "err", err)

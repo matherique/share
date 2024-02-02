@@ -17,15 +17,15 @@ type getSnipetHandler struct {
 	getSnipetUseCase usecase.GetSnipetUseCase
 }
 
-func NewGetSnipetHandler(router *chi.Mux, g usecase.GetSnipetUseCase) {
+func NewGetSnipetHandler(g usecase.GetSnipetUseCase) *getSnipetHandler {
 	getsnipets := &getSnipetHandler{
 		getSnipetUseCase: g,
 	}
 
-	router.Get("/{hash}", getsnipets.get)
+	return getsnipets
 }
 
-func (g getSnipetHandler) get(w http.ResponseWriter, r *http.Request) {
+func (g getSnipetHandler) Do(w http.ResponseWriter, r *http.Request) {
 	h := chi.URLParam(r, "hash")
 	if len(h) == 0 {
 		utils.SendRespond(w, http.StatusBadRequest, getSnipetError{"missing link"})

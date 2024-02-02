@@ -9,7 +9,7 @@ var now = time.Now
 
 type SnipetsRepository interface {
 	Save(ctx context.Context, snipet *Snipet) error
-	Get(ctx context.Context, hash string) (*Snipet, error)
+	Get(ctx context.Context, hash string, isSecure bool) (*Snipet, error)
 }
 
 type Snipet struct {
