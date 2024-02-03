@@ -4,21 +4,21 @@ Create a shareable link from any string (code, snippet, notes, etc)
 
 ## Usage 
 
-Start project
+To send a file just send it as binary to the endpoint `/`
 ```bash
-make run
+curl -X POST localhost:8080 --data-binary "teste 123"
+htttp://localhost:8080/<id>
 ```
 
-Send hole file as `binary` to `localhost:8080`
+To send an encrypted file use `/secure`
 ```bash
-curl localhost:8080 --data-binary "teste 123"
-```
-should return `htttp://localhost:8080/<id>`
-
-
-If u curl the response url you should get the same sended data
-```bash
-curl htttp://localhost:8080/k12j41a
+curl -X POST localhost:8080/secure --data-binary "teste 123"
+link: htttp://localhost:8080/<id>
+key: random_key==
 ```
 
-
+To return the file use the endpoint returned by the create endpoint
+```bash
+curl -X GET http://localhost:8080/<id>
+```
+To retrive the secure data use `/secure/<id>` endpoint and add key in `Authorization` header
